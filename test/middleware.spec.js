@@ -256,7 +256,7 @@ describe('auth middleware', () => {
 
       store.dispatch(fetchAction('https://test.com'))
 
-      expect(fetch).toHaveBeenCalledWith('https://test.com', { headers: {} })
+      expect(fetch).toHaveBeenCalledWith(new Request('https://test.com'))
     })
 
     it('passes request options to fetch', () => {
@@ -273,11 +273,13 @@ describe('auth middleware', () => {
         })
       )
 
-      expect(fetch).toHaveBeenCalledWith('https://test.com', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: 'test@test.com' })
-      })
+      expect(fetch).toHaveBeenCalledWith(
+        new Request('https://test.com', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: 'test@test.com' })
+        })
+      )
     })
 
     it('calls authorize with authenticated data', () => {
@@ -294,7 +296,11 @@ describe('auth middleware', () => {
 
       store.dispatch(fetchAction('https://test.com'))
 
-      expect(authorize).toHaveBeenCalledWith(data, expect.any(Function))
+      expect(authorize).toHaveBeenCalledWith(
+        data,
+        expect.any(Function),
+        expect.anything()
+      )
     })
 
     it('sets headers when authorize runs block function', () => {
@@ -313,9 +319,11 @@ describe('auth middleware', () => {
 
       store.dispatch(fetchAction('https://test.com'))
 
-      expect(fetch).toHaveBeenCalledWith('https://test.com', {
-        headers: { Authorization: '1235' }
-      })
+      expect(fetch).toHaveBeenCalledWith(
+        new Request('https://test.com', {
+          headers: { Authorization: '1235' }
+        })
+      )
     })
 
     describe('when request succeeds', () => {

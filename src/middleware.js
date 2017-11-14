@@ -96,15 +96,32 @@ export default (config = {}) => {
         case FETCH: {
           const { session } = getState()
           const { url, options = {} } = action.payload
-          const { headers = {} } = options
+          const headers = new Headers()
+          const setHeader = (name, value) => {
+            headers.set(name, value)
+          }
 
-          if (authorize) {
-            authorize(session.data, (name, value) => {
-              headers[name] = value
+          // Add initial headers to Header Object
+          if (options.headers) {
+            Object.keys(options.headers).forEach(name => {
+              headers.set(name, options.headers[name])
             })
           }
 
-          return fetch(url, { ...options, headers }).then(response => {
+          // Build initial Request object
+          let req = new Request(url, { ...options, headers })
+
+          if (authorize) {
+            req = authorize(session.data, setHeader, req) || req
+            for (let header of req.headers.entries()) {
+              headers.set(header[0], header[1])
+            }
+          }
+
+          // Build request object with new Headers object
+          req = new Request(req, { headers })
+
+          return fetch(req).then(response => {
             if (response.status === 401 && session.isAuthenticated) {
               dispatch(invalidateSession())
             }
